@@ -14,7 +14,7 @@ from stable_baselines3 import PPO
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from current_rider.envs.auv_simple import AUVSimpleEnv, ARENA_SIZE
-from current_rider.utils.visualise import plot_trajectories
+from current_rider.utils.visualise import plot_episodes_grid
 
 BASE_DIR   = os.path.join(os.path.dirname(__file__), "..")
 MODEL_PATH = os.path.join(BASE_DIR, "models", "baseline_fixed_physics.zip")
@@ -57,6 +57,13 @@ for ep in range(NUM_EPISODES):
         "steps":        info["steps"],
         "goal_reached": info["goal_reached"],
         "final_dist":   info["distance"],
+        "physics": {
+            "mass":               env.mass,
+            "drag_coeff":         env.drag_coeff,
+            "current":            env.current.tolist(),
+            "thrust_noise_scale": env.thrust_noise_scale,
+            "goal_noise_std":     env.goal_noise_std,
+        },
     })
 
 env.close()
@@ -77,19 +84,20 @@ print(f"Avg total reward:    {avg_reward:.2f}")
 print("─" * 57)
 
 # ── Trajectory plot ───────────────────────────────────────────────────────────
-trajectories = []
+episodes = []
 for i, r in enumerate(results[:PLOT_EPISODES]):
-    trajectories.append({
+    episodes.append({
         "positions": r["positions"],
         "start":     r["start"],
         "goal":      r["goal"],
         "label":     f"Ep {i+1} ({'✓' if r['goal_reached'] else '✗'})",
         "colour":    "#2ca02c" if r["goal_reached"] else "#d62728",
+        "physics":   r["physics"],
     })
 
 os.makedirs(os.path.join(BASE_DIR, "outputs"), exist_ok=True)
-plot_trajectories(
-    trajectories=trajectories,
+plot_episodes_grid(
+    episodes=episodes,
     arena_size=ARENA_SIZE,
     title="Baseline Agent — Fixed Physics",
     save_path=SAVE_PATH,

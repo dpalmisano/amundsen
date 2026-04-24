@@ -25,12 +25,12 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from current_rider.envs.auv_simple import AUVSimpleEnv, ARENA_SIZE
-from current_rider.utils.visualise import plot_trajectories
+from current_rider.utils.visualise import plot_episodes_grid
 
 BASE_DIR  = os.path.join(os.path.dirname(__file__), "..")
 SAVE_PATH = os.path.join(BASE_DIR, "outputs", "randomised_random_actions.png")
 
-NUM_EPISODES = 5
+NUM_EPISODES = 3
 env = AUVSimpleEnv(randomise=True)
 trajectories = []
 
@@ -64,15 +64,22 @@ for ep in range(NUM_EPISODES):
         "positions": np.array(positions),
         "start":     start,
         "goal":      goal,
-        "label":     f"Ep {ep + 1}",
+        "label":     f"Ep {ep + 1}  ({'✓' if info['goal_reached'] else '✗'})",
+        "physics": {
+            "mass":               env.mass,
+            "drag_coeff":         env.drag_coeff,
+            "current":            env.current.tolist(),
+            "thrust_noise_scale": env.thrust_noise_scale,
+            "goal_noise_std":     env.goal_noise_std,
+        },
     })
 
 env.close()
 print()
 
 os.makedirs(os.path.join(BASE_DIR, "outputs"), exist_ok=True)
-plot_trajectories(
-    trajectories=trajectories,
+plot_episodes_grid(
+    episodes=trajectories,
     arena_size=ARENA_SIZE,
     title="Sim A (Randomised Physics) — Random Actions",
     save_path=SAVE_PATH,

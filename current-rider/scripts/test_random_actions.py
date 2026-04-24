@@ -19,7 +19,7 @@ from current_rider.envs.auv_simple import (
     DEFAULT_MASS, DEFAULT_DRAG, DEFAULT_CURRENT,
     DEFAULT_THRUST_NOISE, DEFAULT_GOAL_NOISE, MAX_STEPS, DT,
 )
-from current_rider.utils.visualise import plot_trajectories
+from current_rider.utils.visualise import plot_episodes_grid
 print("=" * 60)
 print("FIXED PHYSICS (randomise=False)")
 print(f"  mass             = {DEFAULT_MASS} kg")
@@ -41,7 +41,7 @@ _check_env.close()
 print("check_env passed.\n")
 
 # ── 2. Run episodes ───────────────────────────────────────────────────────────
-NUM_EPISODES = 1
+NUM_EPISODES = 3
 env = AUVSimpleEnv()
 trajectories = []
 
@@ -71,7 +71,14 @@ for ep in range(NUM_EPISODES):
         "positions": np.array(positions),
         "start":     start,
         "goal":      goal,
-        "label":     f"Episode {ep + 1}",
+        "label":     f"Episode {ep + 1}  ({'✓' if info['goal_reached'] else '✗'})",
+        "physics": {
+            "mass":               env.mass,
+            "drag_coeff":         env.drag_coeff,
+            "current":            env.current.tolist(),
+            "thrust_noise_scale": env.thrust_noise_scale,
+            "goal_noise_std":     env.goal_noise_std,
+        },
     })
 
     # Summary stats
@@ -94,8 +101,8 @@ output_dir = os.path.join(os.path.dirname(__file__), "..", "outputs")
 os.makedirs(output_dir, exist_ok=True)
 save_path = os.path.join(output_dir, "random_actions_test.png")
 
-plot_trajectories(
-    trajectories=trajectories,
+plot_episodes_grid(
+    episodes=trajectories,
     arena_size=ARENA_SIZE,
     title="Sim A — Random Actions (Fixed Physics)",
     save_path=save_path,
